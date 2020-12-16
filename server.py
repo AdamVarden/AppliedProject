@@ -9,7 +9,7 @@ from threading import Thread
 clients = {}
 addresses = {}
 
-HOST = ''
+HOST = 'localhost'
 PORT = 33000
 BUFSIZ = 1024
 ADDR = (HOST,PORT)
@@ -29,9 +29,12 @@ def accept_connections():
 def handle_client(client):
     # Handles the client that came in
     name = client.recv(BUFSIZ).decode("utf8")
+    
     msg = "%s has joined the room!" % name
+    client.send(bytes(msg, "utf8"))
     broadcast(bytes(msg, "utf8"))
-    client[client] = name
+    clients[client] = name
+    
     while True:
         msg = client.recv(BUFSIZ)
         if msg != bytes("{quit}", "utf8"):
