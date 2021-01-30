@@ -3,9 +3,11 @@ Server Code
 """
 
 from socket import AF_INET, socket, SOCK_STREAM 
-from threading import Thread 
+from threading import Thread
+import pymongo
+from datetime import date
 
-#Constraints
+#Constraints for Server
 clients = {}
 addresses = {}
 
@@ -15,6 +17,12 @@ BUFSIZ = 1024
 ADDR = (HOST,PORT)
 SERVER = socket(AF_INET, SOCK_STREAM)
 SERVER.bind(ADDR)
+
+# Database
+myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+mydb = myclient["logDatabase"]
+mycol = mydb["log"]
+today = str(date.today())
 
 def accept_connections():
     #Handles incoming clients
@@ -41,6 +49,8 @@ def handle_client(client):
             broadcast(msg, name+": ")
         else:
             client.send(bytes("{quit}", "utf8"))
+            addToDatabase = {"Name":name, "Address": addresses[client], "Date": today}
+            insert = mycol.insert_one(addToDatabase)
             client.close()
             del clients[client]
             broadcast(bytes("%s has left the chat." % name,"utf8"))
