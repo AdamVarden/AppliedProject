@@ -66,6 +66,8 @@ def broadcast(msg, prefix=""):
 if __name__ == "__main__":
     SERVER.listen(5) # Listens for a max of 5 connections
     print("Waiting for the connection")
+    for x in mycol.find():
+        print(x)
     ACCEPT_THREAD = Thread(target=accept_connections)
     ACCEPT_THREAD.start()
     ACCEPT_THREAD.join()
