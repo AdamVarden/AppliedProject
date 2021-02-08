@@ -10,7 +10,7 @@ from datetime import date
 #Constraints for Server
 clients = {}
 addresses = {}
-
+fileShareMode = False
 HOST = 'localhost'
 PORT = 33000
 BUFSIZ = 1024
@@ -29,7 +29,7 @@ def accept_connections():
     while True:
         client, client_address = SERVER.accept()
         print("%s:%s has connected. " % client_address)
-        client.send(bytes("Welcome to the Room", "utf8"))
+        client.send(bytes("Welcome to the Room ", "utf8"))
         addresses[client] = client_address
         Thread(target=handle_client, args=(client,)).start()
         
@@ -46,7 +46,12 @@ def handle_client(client):
     while True:
         msg = client.recv(BUFSIZ)
         if msg != bytes("{quit}", "utf8"):
-            broadcast(msg, name+": ")
+            if msg == bytes("{fileshare}", "utf8"):
+                print("!fileshare elif")
+                fileShareMode = True
+            else:
+                broadcast(msg, name+": ")
+
         else:
             client.send(bytes("{quit}", "utf8"))
             addToDatabase = {"Name":name, "Address": addresses[client], "Date": today}
@@ -60,7 +65,10 @@ def handle_client(client):
 def broadcast(msg, prefix=""):
     # Prefix is used for the name identification
     for sock in clients:
-        sock.send(bytes(prefix,"utf8")+msg)
+        if fileShareMode == True:
+            print("Fileshare mode enabled")
+        else:
+            sock.send(bytes(prefix,"utf8")+msg)
 
 
 if __name__ == "__main__":

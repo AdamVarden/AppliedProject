@@ -6,6 +6,7 @@ from threading import Thread
 import tkinter
 from tkinter import *
 from tkinter import ttk
+from tkinter import filedialog 
 import os
 
 HOST = ""
@@ -13,6 +14,9 @@ PORT = 33000
 ADDR = (HOST, PORT)
 BUFSIZ = 1024
 userName = ""
+filename = ""
+fileShareMode = False
+
 client_socket = socket(AF_INET, SOCK_STREAM)
 
 def receive():
@@ -29,10 +33,16 @@ def send(event=None):
     # Handles sending messages
     msg = my_msg.get()
     my_msg.set("") # Clears the input field
-    client_socket.send(bytes(msg, "utf8"))
     if msg == "{quit}":
         client_socket.close()
         root.quit()
+    elif msg == "{fileshare}":
+        print("{fileshare}")
+        client_socket.send(bytes(msg, "utf8"))
+
+    else:
+        client_socket.send(bytes(msg, "utf8"))
+
 
 def on_closing(event=None):
     my_msg.set("{quit}")
@@ -53,26 +63,42 @@ def connect():
     receive_thread = Thread(target=receive)
     receive_thread.start()
 
+def browseFiles(): 
+    filename = filedialog.askopenfilename(initialdir = "/", title = "Select a File", filetypes = (("Text files",  "*.txt*"), ("all files", "*.*"))) 
+       
+    # Change label contents 
+    theFileName.configure(text="File Opened: "+filename) 
+    print(filename)
+
+def sendFile():
+    my_msg.set("{fileshare}")
+    send()
+        
+    
 root = tkinter.Tk()
 root.title("Chat")
 
 # Tabs
 tabControl = ttk.Notebook(root)
-tab1 = ttk.Frame(tabControl)
-tab2 = ttk.Frame(tabControl)
-tabControl.add(tab1, text='Tab 1')
-tabControl.add(tab2, text='Tab 2')
+connnectionTab = ttk.Frame(tabControl)
+chatTab = ttk.Frame(tabControl)
+fileShareTab = ttk.Frame(tabControl)
+
+tabControl.add(connnectionTab, text='Connect')
+tabControl.add(chatTab, text='Chat')
+tabControl.add(fileShareTab, text='File Share')
+
 tabControl.pack(expand=1, fill="both")
 
-host = Label(tab1, text="Host")
-port = Label(tab1, text="Port")
-userName = Label(tab1, text="Name")
+host = Label(connnectionTab, text="Host")
+port = Label(connnectionTab, text="Port")
+userName = Label(connnectionTab, text="Name")
 
-hostEntry = Entry(tab1)
-portEntry = Entry(tab1)
-nameEntry = Entry(tab1)
+hostEntry = Entry(connnectionTab)
+portEntry = Entry(connnectionTab)
+nameEntry = Entry(connnectionTab)
 
-submit_button=Button(tab1,text = 'Connect', command = connect)
+submit_button=Button(connnectionTab,text = 'Connect', command = connect)
 
 host.pack()
 hostEntry.pack()
@@ -84,7 +110,7 @@ submit_button.pack()
 
 
 # Opens the Chat
-messages_frame = tkinter.Frame(tab2)
+messages_frame = tkinter.Frame(chatTab)
 my_msg = tkinter.StringVar()
 my_msg.set("Text...")
 scrollbar = tkinter.Scrollbar(messages_frame)
@@ -97,16 +123,22 @@ msg_list.pack(side=tkinter.LEFT, fill=tkinter.BOTH)
 msg_list.pack()
 messages_frame.pack()
 
-entry_field = tkinter.Entry(tab2, textvariable=my_msg)
+entry_field = tkinter.Entry(chatTab, textvariable=my_msg)
 entry_field.bind("<Return>", send)
 entry_field.pack()
-send_button = tkinter.Button(tab2, text="Send", command=send)
+send_button = tkinter.Button(chatTab, text="Send", command=send)
 send_button.pack()
 root.protocol("WM_DELETE_WINDOW", on_closing)
 
 
+# File Share
+theFileName = Label(fileShareTab,  text = "No File Selected", width = 100, height = 4,  fg = "blue") 
+fileExpButton = Button(fileShareTab,  text = "Browse Files", command = browseFiles) 
+sendFileButton = Button(fileShareTab,  text = "Send File", command = sendFile) 
 
-
+theFileName.pack()
+fileExpButton.pack()
+sendFileButton.pack()
 
 tkinter.mainloop()  # Starts GUI execution.
         
