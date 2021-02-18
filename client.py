@@ -21,24 +21,58 @@ client_socket = socket(AF_INET, SOCK_STREAM)
 
 def receive():
     # Handles receiving of messages
+    global fileShareMode
     while True:
         try:
             msg = client_socket.recv(BUFSIZ).decode("utf8")
-            msg_list.insert(tkinter.END,msg)
+            if msg == "{fileShare}":
+                fileShareMode = True
+                
+            elif fileShareMode == True:
+                with open('receiver', "wb") as f:
+                    while True:
+                        # read 1024 bytes from the socket (receive)
+                        bytes_read = client_socket.recv(BUFSIZ)
+                        if not bytes_read:    
+                            # nothing is received
+                            # file transmitting is done
+                            break
+                        # write to the file the bytes we just received
+                        f.write(bytes_read) 
+                fileShareMode = False
+            else:
+                msg_list.insert(tkinter.END,msg)
             
         except OSError:
             break
 
 def send(event=None):    
+    global fileShareMode, filename
     # Handles sending messages
     msg = my_msg.get()
     my_msg.set("") # Clears the input field
     if msg == "{quit}":
         client_socket.close()
         root.quit()
+        
+    # Sending a key word to the server 
     elif msg == "{fileshare}":
         print("{fileshare}")
         client_socket.send(bytes(msg, "utf8"))
+        fileShareMode = True
+
+    elif fileShareMode == True:
+        with open(filename, "rb") as f:
+            while True:
+                # read the bytes from the file
+                bytes_read = f.read(BUFSIZ)
+                if not bytes_read:
+                    # file transmitting is done
+                    break
+                # we use sendall to assure transimission in 
+                # busy networks
+                client_socket.sendall(bytes_read)
+        fileShareMode = False
 
     else:
         client_socket.send(bytes(msg, "utf8"))
@@ -63,15 +97,20 @@ def connect():
     receive_thread = Thread(target=receive)
     receive_thread.start()
 
+# For opening file explorer and getting a file name
 def browseFiles(): 
+    global filename
     filename = filedialog.askopenfilename(initialdir = "/", title = "Select a File", filetypes = (("Text files",  "*.txt*"), ("all files", "*.*"))) 
        
     # Change label contents 
     theFileName.configure(text="File Opened: "+filename) 
     print(filename)
 
+# Notifying the server we are gonna be sending a file
 def sendFile():
     my_msg.set("{fileshare}")
+    send()
+    my_msg.set(filename)
     send()
         
     

@@ -44,18 +44,31 @@ def handle_client(client):
     clients[client] = name
     
     while True:
+        global fileShareMode
+        
         msg = client.recv(BUFSIZ)
+        
         if msg != bytes("{quit}", "utf8"):
+            
             if msg == bytes("{fileshare}", "utf8"):
-                print("!fileshare elif")
+                
+                print("fileshare elif file share is true")
                 fileShareMode = True
-            else:
-                broadcast(msg, name+": ")
+                print("Broast case function called file about to be shared")
+                broadcast(msg)
+                
+            if fileShareMode == True:
+                print("Broast case function called for bytes")
+                broadcast(msg)
 
+            else:
+                print("Broadcast a message")
+                broadcast(msg, name+": ")
+        # When the client leaves
         else:
             client.send(bytes("{quit}", "utf8"))
-            addToDatabase = {"Name":name, "Address": addresses[client], "Date": today}
-            insert = mycol.insert_one(addToDatabase)
+            #addToDatabase = {"Name":name, "Address": addresses[client], "Date": today}
+            #insert = mycol.insert_one(addToDatabase)
             client.close()
             del clients[client]
             broadcast(bytes("%s has left the chat." % name,"utf8"))
@@ -63,10 +76,13 @@ def handle_client(client):
 
 
 def broadcast(msg, prefix=""):
+    global fileShareMode
     # Prefix is used for the name identification
     for sock in clients:
         if fileShareMode == True:
-            print("Fileshare mode enabled")
+            sock.send(bytes(msg))
+            print("Sent out file bytes")
+            fileShareMode = False
         else:
             sock.send(bytes(prefix,"utf8")+msg)
 
@@ -74,8 +90,8 @@ def broadcast(msg, prefix=""):
 if __name__ == "__main__":
     SERVER.listen(5) # Listens for a max of 5 connections
     print("Waiting for the connection")
-    for x in mycol.find():
-        print(x)
+    #for x in mycol.find():
+        #print(x)
     ACCEPT_THREAD = Thread(target=accept_connections)
     ACCEPT_THREAD.start()
     ACCEPT_THREAD.join()
