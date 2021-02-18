@@ -52,14 +52,17 @@ def handle_client(client):
             
             if msg == bytes("{fileshare}", "utf8"):
                 
-                print("fileshare elif file share is true")
+                print("fileshare alert")
+                fileShareAlert = msg
+
                 fileShareMode = True
                 print("Broast case function called file about to be shared")
-                broadcast(msg)
-                
-            if fileShareMode == True:
-                print("Broast case function called for bytes")
-                broadcast(msg)
+                broadcast(fileShareAlert)
+                fileSize = client.recv(BUFSIZ)
+                print(fileSize)
+                file = client.recv(BUFSIZ)
+                broadcast(file)
+                fileShareMode = False
 
             else:
                 print("Broadcast a message")
@@ -81,8 +84,7 @@ def broadcast(msg, prefix=""):
     for sock in clients:
         if fileShareMode == True:
             sock.send(bytes(msg))
-            print("Sent out file bytes")
-            fileShareMode = False
+            print("Sent File info ")
         else:
             sock.send(bytes(prefix,"utf8")+msg)
 
