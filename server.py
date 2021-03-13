@@ -47,7 +47,8 @@ def handle_client(client):
     broadcast(bytes(msg, "utf8"))
     clients[client] = name
     addToDatabase = {"Name":name, "Address": addresses[client], "Date": today}
-    insert = mycol.insert_one(addToDatabase)
+    # Uncomment later
+    #insert = mycol.insert_one(addToDatabase)
     
     while True:
         global fileShareMode
@@ -62,17 +63,17 @@ def handle_client(client):
                 fileShareAlert = msg
                 broadcast(fileShareAlert)
                 fileShareMode = True
-                
-                print("Broast case function called file about to be shared")
-                fileSize = client.recv(BUFSIZ)
-                print("The filesize:" + str(fileSize))
-                file = client.recv(BUFSIZ)
-                print("The file: "+ str(file))
-                broadcast(file)
 
             else:
-                print("Broadcast a message")
+                print("Broadcast a chat message")
                 broadcast(msg, name+": ")
+                
+            if fileShareMode == True:
+                print("Broadcast case function called file about to be shared")
+                file = client.recv(BUFSIZ)
+                broadcast(file)
+                print("The file: "+ str(file))
+                
         # When the client leaves
         else:
             client.send(bytes("{quit}", "utf8"))
@@ -96,6 +97,7 @@ def broadcast(msg, prefix=""):
 
 
 def refresh():
+    # Used for testing
     #dummyData = ["127.0.0.1","33000"]
     #addToDatabase = {"Name":"Adam", "Address": dummyData, "Date": today}
     #insert = mycol.insert_one(addToDatabase)
@@ -202,7 +204,8 @@ def UI():
 if __name__ == "__main__":
     SERVER.listen(5) # Listens for a max of 5 connections
     print("Waiting for the connection")
-    
+    """
+
     root = Tk()
     root.geometry("370x400")
     
@@ -217,7 +220,8 @@ if __name__ == "__main__":
     
     
     UI()
-    
+    """
+
     ACCEPT_THREAD = Thread(target=accept_connections)
     ACCEPT_THREAD.start()
     ACCEPT_THREAD.join()

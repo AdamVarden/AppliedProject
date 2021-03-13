@@ -25,35 +25,16 @@ def receive():
     while True:
         try:
             msg = client_socket.recv(BUFSIZ).decode("utf8")
-            print("The msg value: " + msg)
             if msg == "{fileshare}":
                 print("The alert: " + msg)
                 fileShareMode = True
-                total = 0
-                dummyRecv = client_socket.recv(BUFSIZ).decode()
-                print("Dummy Recv" + str(dummyRecv))
-                theFileSize = client_socket.recv(BUFSIZ).decode()
                 
-                print("The file size " + str(theFileSize))
                 theFile = client_socket.recv(BUFSIZ)
-                print("The file content " + str(theFile))
-                total = len(theFile)
+                #print("The file content " + str(theFile))
                 
                 with open('receiver', "wb") as f:
-                    while (theFile):
-                        print("Receiving")
-                        # read 1024 bytes from the socket (receive)
-                        f.write(theFile)
-                        if str((total)) != theFileSize:    
-                            print("Downloading")
-                            theFile = client_socket.recv(BUFSIZ)
-                            total = total + len(theFile)
-                            
-                        else:
-                            print("File Received")
-                            break
-                f.close()
-                print("File received")
+                    f.write(theFile)
+
                         
                 fileShareMode = False
             else:
@@ -77,25 +58,11 @@ def send(event=None):
         
         print("{fileshare} alert sent ")
         client_socket.send(bytes(msg, "utf8"))
-
-        fileSize = os.stat(filename).st_size
-        print("The filesize in send: "+ str(fileSize))
-        client_socket.send(bytes(fileSize))
         
-        with open(filename, "rb") as f:
-            while True:
-                # read the bytes from the file
-                print("Sending")
-                bytes_read = f.read(fileSize)
-                if not bytes_read:
-                    
-                    print("file transmitting is done")
-                    break
-                # we use sendall to assure transimission in 
-                # busy networks
-        client_socket.sendall(bytes_read)
-        print("Left with")
-        f.close()
+        with open(filename, 'rb') as f:
+            client_socket.sendfile(f, 0)
+            print(f)
+        print("File sent")
 
     else:
         client_socket.send(bytes(msg, "utf8"))
@@ -133,8 +100,7 @@ def browseFiles():
 def sendFile():
     my_msg.set("{fileshare}")
     send()
-    # my_msg.set(filename)
-    # send()
+    send()
         
     
 root = tkinter.Tk()
