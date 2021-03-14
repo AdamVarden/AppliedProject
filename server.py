@@ -48,7 +48,7 @@ def handle_client(client):
     clients[client] = name
     addToDatabase = {"Name":name, "Address": addresses[client], "Date": today}
     # Uncomment later
-    #insert = mycol.insert_one(addToDatabase)
+    insert = mycol.insert_one(addToDatabase)
     
     while True:
         global fileShareMode
@@ -204,7 +204,7 @@ def UI():
 if __name__ == "__main__":
     SERVER.listen(5) # Listens for a max of 5 connections
     print("Waiting for the connection")
-    """
+    
 
     root = Tk()
     root.geometry("370x400")
@@ -220,7 +220,7 @@ if __name__ == "__main__":
     
     
     UI()
-    """
+    
 
     ACCEPT_THREAD = Thread(target=accept_connections)
     ACCEPT_THREAD.start()
