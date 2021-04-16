@@ -70,8 +70,11 @@ def handle_client(client):
                 
             if fileShareMode == True:
                 print("Broadcast case function called file about to be shared")
+                fileName = client.recv(BUFSIZ)
                 file = client.recv(BUFSIZ)
+                broadcast(fileName)
                 broadcast(file)
+                print("The file Name: "+ str(fileName))
                 print("The file: "+ str(file))
                 
         # When the client leaves
@@ -218,10 +221,8 @@ if __name__ == "__main__":
     
     tabControl.pack(expand=1, fill="both")
     
-    
     UI()
     
-
     ACCEPT_THREAD = Thread(target=accept_connections)
     ACCEPT_THREAD.start()
     ACCEPT_THREAD.join()

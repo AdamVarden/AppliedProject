@@ -14,7 +14,8 @@ PORT = 33000
 ADDR = (HOST, PORT)
 BUFSIZ = 1024
 userName = ""
-filename = ""
+filePath = ""
+fileName = ""
 fileShareMode = False
 
 client_socket = socket(AF_INET, SOCK_STREAM)
@@ -28,11 +29,11 @@ def receive():
             if msg == "{fileshare}":
                 print("The alert: " + msg)
                 fileShareMode = True
-                
+                theFileName = client_socket.recv(BUFSIZ)
                 theFile = client_socket.recv(BUFSIZ)
                 #print("The file content " + str(theFile))
                 
-                with open('receiver', "wb") as f:
+                with open(theFileName, "wb") as f:
                     f.write(theFile)
 
                         
@@ -44,7 +45,7 @@ def receive():
             break
 
 def send(event=None):    
-    global fileShareMode, filename
+    global fileShareMode, filePath, fileName
     # Handles sending messages
     msg = my_msg.get()
     my_msg.set("") # Clears the input field
@@ -58,8 +59,12 @@ def send(event=None):
         
         print("{fileshare} alert sent ")
         client_socket.send(bytes(msg, "utf8"))
-        
-        with open(filename, 'rb') as f:
+
+        fileName = os.path.basename(filePath)
+        print(fileName+" Has been sent")
+        client_socket.send(bytes(fileName, "utf8"))
+                
+        with open(filePath, 'rb') as f:
             client_socket.sendfile(f, 0)
             print(f)
         print("File sent")
@@ -89,12 +94,12 @@ def connect():
 
 # For opening file explorer and getting a file name
 def browseFiles(): 
-    global filename
-    filename = filedialog.askopenfilename(initialdir = "/", title = "Select a File", filetypes = (("Text files",  "*.txt*"), ("all files", "*.*"))) 
+    global filePath
+    filePath = filedialog.askopenfilename(initialdir = "/", title = "Select a File", filetypes = (("Text files",  "*.txt*"), ("all files", "*.*"))) 
        
     # Change label contents 
-    theFileName.configure(text="File Opened: "+filename) 
-    print(filename)
+    theFileName.configure(text="File Opened: "+filePath) 
+    print(filePath)
 
 # Notifying the server we are gonna be sending a file
 def sendFile():
