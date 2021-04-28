@@ -160,7 +160,20 @@ def search():
         date_label.configure(text="")
 
 def UI():
-    global searchEntry, clicked, name_label, address_label,date_label
+    global searchEntry, clicked, name_label, address_label,date_label,viewDatabaseTab
+    
+
+    root = Tk()
+    root.geometry("370x400")
+    
+    tabControl = ttk.Notebook(root)
+    viewDatabaseTab = ttk.Frame(tabControl)
+    
+    searchTab = ttk.Frame(tabControl)
+    tabControl.add(viewDatabaseTab, text='Database')
+    tabControl.add(searchTab, text='Search')
+    
+    tabControl.pack(expand=1, fill="both")
     root.title("Server")
     
     refresh()
@@ -207,28 +220,11 @@ def UI():
 if __name__ == "__main__":
     SERVER.listen(5) # Listens for a max of 5 connections
     print("Waiting for the connection")
-    
 
-    root = Tk()
-    root.geometry("370x400")
     
-    tabControl = ttk.Notebook(root)
-    viewDatabaseTab = ttk.Frame(tabControl)
-    
-    searchTab = ttk.Frame(tabControl)
-    tabControl.add(viewDatabaseTab, text='Database')
-    tabControl.add(searchTab, text='Search')
-    
-    tabControl.pack(expand=1, fill="both")
-    
-    UI()
-    
+    GUI_THREAD = Thread(target=UI)
     ACCEPT_THREAD = Thread(target=accept_connections)
     ACCEPT_THREAD.start()
+    GUI_THREAD.start()
     ACCEPT_THREAD.join()
     SERVER.close()
-    
-    
-    
-
- 
