@@ -1,5 +1,7 @@
 """
     Script for the GUI chat app.
+    G00359605 - Adam Varden
+
 """
 from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
@@ -8,42 +10,45 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog 
 import os
-
+# Variables for connecting to server
 HOST = ""
 PORT = 33000
 ADDR = (HOST, PORT)
 BUFSIZ = 1024
 userName = ""
+# File sharing variables
 filePath = ""
 fileName = ""
 fileShareMode = False
 
 client_socket = socket(AF_INET, SOCK_STREAM)
 
+# Receiving messages from server 
 def receive():
     # Handles receiving of messages
     global fileShareMode
     while True:
         try:
             msg = client_socket.recv(BUFSIZ).decode("utf8")
+            # Entering creation of a file
             if msg == "{fileshare}":
                 print("The alert: " + msg)
                 fileShareMode = True
                 theFileName = client_socket.recv(BUFSIZ)
                 theFile = client_socket.recv(BUFSIZ)
-                #print("The file content " + str(theFile))
-                
+                # Writing the file                
                 with open(theFileName, "wb") as f:
                     f.write(theFile)
-
-                        
+                # Turning file share off
                 fileShareMode = False
+            # Adding messages to the message list widget
             else:
                 msg_list.insert(tkinter.END,msg)
             
         except OSError:
             break
 
+# Sending messages
 def send(event=None):    
     global fileShareMode, filePath, fileName
     # Handles sending messages
@@ -63,24 +68,24 @@ def send(event=None):
         fileName = os.path.basename(filePath)
         print(fileName+" Has been sent")
         client_socket.send(bytes(fileName, "utf8"))
-                
+        # Reading the file as bytes and sending them to the server
         with open(filePath, 'rb') as f:
             client_socket.sendfile(f, 0)
             print(f)
         print("File sent")
 
     else:
+        # Sending a regular message
         client_socket.send(bytes(msg, "utf8"))
 
-
+# When the user closes the GUI
 def on_closing(event=None):
     my_msg.set("{quit}")
     send()
-
+# Method for connecting to the database linked to the connect button on the connect tab
 def connect():
     global HOST, PORT, userName, ADDR
     
-    # ttk.Notebook.select(root, tab2)
     HOST = str(hostEntry.get())
     PORT = int(portEntry.get())
     userName = nameEntry.get()
@@ -89,12 +94,14 @@ def connect():
     
     client_socket.connect(ADDR) 
     client_socket.send(bytes(userName, "utf8"))
+    # Recieving messages thread
     receive_thread = Thread(target=receive)
     receive_thread.start()
 
 # For opening file explorer and getting a file name
 def browseFiles(): 
     global filePath
+    # Finding a file
     filePath = filedialog.askopenfilename(initialdir = "/", title = "Select a File", filetypes = (("Text files",  "*.txt*"), ("all files", "*.*"))) 
        
     # Change label contents 
@@ -107,7 +114,7 @@ def sendFile():
     send()
     send()
         
-    
+# Setting up the GUI
 root = tkinter.Tk()
 root.title("Chat")
 
@@ -164,7 +171,7 @@ send_button.pack()
 root.protocol("WM_DELETE_WINDOW", on_closing)
 
 
-# File Share
+# File Share Tab widgets
 theFileName = Label(fileShareTab,  text = "No File Selected", width = 100, height = 4,  fg = "blue") 
 fileExpButton = Button(fileShareTab,  text = "Browse Files", command = browseFiles) 
 sendFileButton = Button(fileShareTab,  text = "Send File", command = sendFile) 
